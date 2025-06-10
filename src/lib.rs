@@ -1,6 +1,6 @@
 use std::io::{self, BufRead, Write};
 
-pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Result<()> {
+pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Result<i32> {
     loop {
         write!(writer, "$ ")?;
         writer.flush()?;
@@ -12,13 +12,26 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
         if input.is_empty() {
             continue;
         }
-        if input == "exit" {
-            break;
-        }
 
-        writeln!(writer, "{}: command not found", input)?;
+        let mut parts = input.split_whitespace();
+        let command = parts.next().unwrap_or("");
+        let args: Vec<&str> = parts.collect();
+
+        match command {
+            "exit" => {
+                if args.is_empty() || (args.len() == 1 && args[0] == "0") {
+                    return Ok(0);
+                }
+                writeln!(writer, "{}: command not found", input)?;
+            }
+            "version" => {
+                writeln!(writer, "Simple Shell v0.1.0")?;
+            }
+            _ => {
+                writeln!(writer, "{}: command not found", input)?;
+            }
+        }
     }
-    Ok(())
 }
 
 #[cfg(test)]
