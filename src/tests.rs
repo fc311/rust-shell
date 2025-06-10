@@ -86,3 +86,73 @@ fn test_repl_handles_echo_command() {
     assert!(!output_str.contains("echo: no arguments provided"));
     assert!(!output_str.contains("command not found"));
 }
+
+#[test]
+fn test_repl_handles_empty_echo_command() {
+    let input = Cursor::new("echo\nexit\n");
+    let mut output = Vec::new();
+
+    let result = run_repl(input, &mut output);
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap(), 0);
+
+    let output_str = String::from_utf8(output).unwrap();
+    assert!(output_str.contains("$ "));
+    assert!(output_str.contains("echo: no arguments provided"));
+}
+
+#[test]
+fn test_repl_handles_type_command() {
+    let input = Cursor::new("type echo\nexit\n");
+    let mut output = Vec::new();
+
+    let result = run_repl(input, &mut output);
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap(), 0);
+
+    let output_str = String::from_utf8(output).unwrap();
+    assert!(output_str.contains("$ "));
+    assert!(output_str.contains("echo is a shell builtin"));
+}
+
+#[test]
+fn test_repl_handles_type_type_command() {
+    let input = Cursor::new("type type\nexit\n");
+    let mut output = Vec::new();
+
+    let result = run_repl(input, &mut output);
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap(), 0);
+
+    let output_str = String::from_utf8(output).unwrap();
+    assert!(output_str.contains("$ "));
+    assert!(output_str.contains("type is a shell builtin"));
+}
+
+#[test]
+fn test_repl_handles_type_no_args() {
+    let input = Cursor::new("type\nexit\n");
+    let mut output = Vec::new();
+
+    let result = run_repl(input, &mut output);
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap(), 0);
+
+    let output_str = String::from_utf8(output).unwrap();
+    assert!(output_str.contains("$ "));
+    assert!(output_str.contains("type: no arguments provided"));
+}
+
+#[test]
+fn test_repl_handles_type_invalid_command() {
+    let input = Cursor::new("type invalid_command\nexit\n");
+    let mut output = Vec::new();
+
+    let result = run_repl(input, &mut output);
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap(), 0);
+
+    let output_str = String::from_utf8(output).unwrap();
+    assert!(output_str.contains("$ "));
+    assert!(output_str.contains("invalid_command: not found"));
+}

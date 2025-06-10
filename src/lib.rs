@@ -17,6 +17,8 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
         let command = parts.next().unwrap_or("");
         let args: Vec<&str> = parts.collect();
 
+        const BUILT_INS: [&str; 4] = ["exit", "version", "echo", "type"];
+
         match command {
             "exit" => {
                 if args.is_empty() || (args.len() == 1 && args[0] == "0") {
@@ -32,6 +34,17 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
                     writeln!(writer, "echo: no arguments provided")?;
                 } else {
                     writeln!(writer, "{}", args.join(" "))?;
+                }
+            }
+            "type" => {
+                if args.is_empty() {
+                    writeln!(writer, "type: no arguments provided")?;
+                } else {
+                    if args.len() == 1 && BUILT_INS.contains(&args[0]) {
+                        writeln!(writer, "{} is a shell builtin", args[0])?;
+                    } else {
+                        writeln!(writer, "{}: not found", args[0])?;
+                    }
                 }
             }
             _ => {
