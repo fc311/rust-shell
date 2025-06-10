@@ -27,6 +27,13 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
             "version" => {
                 writeln!(writer, "Simple Shell v0.1.0")?;
             }
+            "echo" => {
+                if args.is_empty() {
+                    writeln!(writer, "echo: no arguments provided")?;
+                } else {
+                    writeln!(writer, "{}", args.join(" "))?;
+                }
+            }
             _ => {
                 writeln!(writer, "{}: command not found", input)?;
             }

@@ -70,3 +70,19 @@ fn test_repl_rejects_exit_with_non_zero_arg() {
     assert!(output_str.contains("$ "));
     assert!(output_str.contains("exit 42: command not found"));
 }
+
+#[test]
+fn test_repl_handles_echo_command() {
+    let input = Cursor::new("echo Hello World\nexit\n");
+    let mut output = Vec::new();
+
+    let result = run_repl(input, &mut output);
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap(), 0);
+
+    let output_str = String::from_utf8(output).unwrap();
+    assert!(output_str.contains("$ "));
+    assert!(output_str.contains("Hello World"));
+    assert!(!output_str.contains("echo: no arguments provided"));
+    assert!(!output_str.contains("command not found"));
+}
