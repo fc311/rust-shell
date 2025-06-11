@@ -54,5 +54,5 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
     }
 }
 
-#[cfg(test)]
+#[cfg(test)] // only `cargo test` uses this part of the file
 mod tests;
