@@ -178,3 +178,52 @@ mod type_command_tests {
         assert!(output_str.contains("invalid_command: not found"));
     }
 }
+
+#[cfg(test)]
+mod type_path_scan_tests {
+    use super::*;
+
+    #[test]
+    fn test_repl_handles_type_path_scan_command_found_in_path() {
+        // mock PATH with a temporary directory
+        let temp_dir = tempfile::tempdir().expect("Failed to create temp dir");
+        let temp_path = temp_dir.path().to_str().unwrap();
+        std::env::set_var("PATH", temp_path);
+
+        // create a dummy executable named `ls` in the temp directory created above
+        // this executable only exists for the test, no content needed
+        std::fs::write(temp_dir.path().join("ls"), "").expect("Failed to create dummy ls");
+
+        // now setup and run the test
+        let input = Cursor::new("type ls\nexit\n");
+        let mut output = Vec::new();
+
+        let result = run_repl(input, &mut output);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let output_str = String::from_utf8(output).unwrap();
+        println!("Output: {}", output_str);
+        assert!(output_str.contains("$ "));
+        assert!(output_str.contains(&format!("ls is {}/ls", temp_path)));
+    }
+
+    #[test]
+    fn test_repl_handles_type_path_scan_command_not_in_path() {
+        // Mock PATH with an empty directory
+        let temp_dir = tempfile::tempdir().expect("Failed to create temp dir");
+        let temp_path = temp_dir.path().to_str().unwrap();
+        std::env::set_var("PATH", temp_path);
+
+        let input = Cursor::new("type nonexistent\nexit\n");
+        let mut output = Vec::new();
+
+        let result = run_repl(input, &mut output);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let output_str = String::from_utf8(output).unwrap();
+        assert!(output_str.contains("$ "));
+        assert!(output_str.contains("type: nonexistent: not found"));
+    }
+}

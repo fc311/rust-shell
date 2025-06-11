@@ -37,14 +37,54 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
                 }
             }
             "type" => {
+                // if the command is `type`, but has no arguments, print an error
                 if args.is_empty() {
                     writeln!(writer, "type: no arguments provided")?;
-                } else {
-                    if args.len() == 1 && BUILT_INS.contains(&args[0]) {
-                        writeln!(writer, "{} is a shell builtin", args[0])?;
-                    } else {
-                        writeln!(writer, "{}: not found", args[0])?;
+                    continue;
+                }
+
+                // if the number of arguments after `type` is not exactly one, print an error
+                if args.len() != 1 {
+                    writeln!(writer, "type: expected exactly one argument")?;
+                    continue;
+                }
+
+                // extract the executable name from the argument provided with `type`
+                let executable = args[0];
+
+                // check if the executable provided is a shell builtin
+                if BUILT_INS.contains(&executable) {
+                    writeln!(writer, "{} is a shell builtin", executable)?;
+                    continue;
+                }
+
+                // if the executable is not a shell builtin, check if it exists in the PATH
+                let path = std::env::var("PATH").unwrap_or_default();
+
+                // Split the PATH by the system's path separator
+                let separator = std::path::MAIN_SEPARATOR;
+
+                // set a flag to indicate if the executable was found
+                let mut found = false;
+
+                // Iterate over each directory in the PATH
+                for dir in path.split(separator) {
+                    // Construct the full path to the executable
+                    let full_path = std::path::Path::new(&dir).join(executable);
+
+                    // Check if the file exists and is a regular file
+                    if std::fs::metadata(&full_path)
+                        .map(|m| m.is_file())
+                        .unwrap_or(false)
+                    {
+                        writeln!(writer, "{} is {}", executable, full_path.display())?;
+                        found = true;
+                        break;
                     }
+                }
+
+                if !found {
+                    writeln!(writer, "type: {}: not found", executable)?;
                 }
             }
             _ => {

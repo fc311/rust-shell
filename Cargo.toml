@@ -13,3 +13,6 @@ thiserror = "1.0.38" # error handling
 [lib]
 name = "simple_shell"
 path = "src/lib.rs"
+
+[dev-dependencies]
+tempfile = "3.13" # for temporary files
