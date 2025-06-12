@@ -103,7 +103,8 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
                 }
 
                 if found {
-                    let output = Command::new(full_path)
+                    let output = Command::new(&command) // Changed from full_path to command
+                        .current_dir(full_path.parent().unwrap_or_else(|| Path::new("/"))) // Add this line
                         .args(&args)
                         .output()
                         .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
