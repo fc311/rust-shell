@@ -214,7 +214,6 @@ mod type_path_scan_tests {
         assert_eq!(result.unwrap(), 0);
 
         let output_str = String::from_utf8(output).unwrap();
-        println!("Output: {}", output_str);
         assert!(output_str.contains("$ "));
         assert!(output_str.contains(&format!("ls is {}/ls", temp_path)));
     }
@@ -235,6 +234,6 @@ mod type_path_scan_tests {
 
         let output_str = String::from_utf8(output).unwrap();
         assert!(output_str.contains("$ "));
-        assert!(output_str.contains("type: nonexistent: not found"));
+        assert!(output_str.contains("nonexistent: not found"));
     }
 }

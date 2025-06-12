@@ -81,7 +81,7 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
                 }
 
                 if !found {
-                    writeln!(writer, "type: {}: not found", executable)?;
+                    writeln!(writer, "{}: not found", executable)?;
                 }
             }
             _ => {
