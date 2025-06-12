@@ -1,4 +1,7 @@
+use std::env;
 use std::io::{self, BufRead, Write};
+use std::path::Path;
+use std::process::Command;
 
 pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Result<i32> {
     loop {
@@ -85,7 +88,32 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
                 }
             }
             _ => {
-                writeln!(writer, "{}: command not found", input)?;
+                let path = env::var("PATH").unwrap_or_default();
+                let separator = ":";
+
+                let mut found = false;
+                let mut full_path = Path::new(command).to_path_buf();
+                for dir in path.split(separator) {
+                    let candidate = Path::new(dir).join(command);
+                    if candidate.exists() {
+                        full_path = candidate;
+                        found = true;
+                        break;
+                    }
+                }
+
+                if found {
+                    let output = Command::new(full_path)
+                        .args(&args)
+                        .output()
+                        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+
+                    writer.write_all(&output.stdout)?;
+                    writer.write_all(&output.stderr)?;
+                    writer.flush()?;
+                } else {
+                    writeln!(writer, "{}: not found", command)?;
+                }
             }
         }
     }

@@ -228,3 +228,80 @@ mod type_path_scan_tests {
         assert!(output_str.contains("nonexistent: not found"));
     }
 }
+
+#[cfg(test)]
+mod executable_tests {
+    use super::*;
+    use std::fs;
+    use std::os::unix::fs::PermissionsExt;
+
+    #[test]
+    fn test_repl_runs_executable_in_path() {
+        let temp_dir = tempfile::tempdir().expect("Failed to create temp dir");
+        let temp_path = temp_dir.path().to_str().unwrap();
+        std::env::set_var("PATH", temp_path);
+
+        // Create a mock executable (shell script)
+        let script_path = temp_dir.path().join("testcmd");
+        fs::write(&script_path, "#!/bin/sh\necho 'Hello from testcmd'\n")
+            .expect("Failed to create mock executable");
+        // Make it executable
+        fs::set_permissions(&script_path, fs::Permissions::from_mode(0o755))
+            .expect("Failed to set executable permissions");
+
+        let input = Cursor::new("testcmd\nexit\n");
+        let mut output = Vec::new();
+
+        let result = run_repl(input, &mut output);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let output_str = String::from_utf8(output).unwrap();
+        assert!(output_str.contains("$ "));
+        assert!(output_str.contains("Hello from testcmd"));
+    }
+
+    #[test]
+    fn test_repl_handles_nonexistent_executable() {
+        let temp_dir = tempfile::tempdir().expect("Failed to create temp dir");
+        let temp_path = temp_dir.path().to_str().unwrap();
+        std::env::set_var("PATH", temp_path);
+
+        let input = Cursor::new("nonexistent\nexit\n");
+        let mut output = Vec::new();
+
+        let result = run_repl(input, &mut output);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let output_str = String::from_utf8(output).unwrap();
+        assert!(output_str.contains("$ "));
+        assert!(output_str.contains("nonexistent: not found"));
+    }
+
+    #[test]
+    fn test_repl_prioritizes_builtin_over_executable() {
+        let temp_dir = tempfile::tempdir().expect("Failed to create temp dir");
+        let temp_path = temp_dir.path().to_str().unwrap();
+        std::env::set_var("PATH", temp_path);
+
+        // Create a mock executable named 'echo'
+        let script_path = temp_dir.path().join("echo");
+        fs::write(&script_path, "#!/bin/sh\necho 'Mock echo'\n")
+            .expect("Failed to create mock echo");
+        fs::set_permissions(&script_path, fs::Permissions::from_mode(0o755))
+            .expect("Failed to set executable permissions");
+
+        let input = Cursor::new("echo hello\nexit\n");
+        let mut output = Vec::new();
+
+        let result = run_repl(input, &mut output);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let output_str = String::from_utf8(output).unwrap();
+        assert!(output_str.contains("$ "));
+        assert!(output_str.contains("hello"));
+        assert!(!output_str.contains("Mock echo"));
+    }
+}
