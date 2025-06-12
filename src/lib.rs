@@ -52,12 +52,6 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
                 // extract the executable name from the argument provided with `type`
                 let executable = args[0];
 
-                // debugging output to show the executable being checked
-                writeln!(writer, "Checking type of: {}", executable)?;
-
-                // debug arguments obtained from the command
-                writeln!(writer, "Arguments: {:?}", args)?;
-
                 // check if the executable provided is a shell builtin
                 if BUILT_INS.contains(&executable) {
                     writeln!(writer, "{} is a shell builtin", executable)?;
@@ -66,9 +60,6 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
 
                 // if the executable is not a shell builtin, check if it exists in the PATH
                 let path = std::env::var("PATH").unwrap_or_default();
-
-                // debugging output to show the PATH being checked
-                writeln!(writer, "Checking PATH: {}", path)?;
 
                 // Split the PATH by the system's path separator
                 // let separator = std::path::MAIN_SEPARATOR;
