@@ -189,21 +189,12 @@ mod type_path_scan_tests {
         let temp_dir = tempfile::tempdir().expect("Failed to create temp dir");
         let temp_path = temp_dir.path().to_str().unwrap();
 
-        // debug the temp path
-        println!("Temporary PATH: {}", temp_path);
-
         // set the PATH environment variable to include the temp directory
         std::env::set_var("PATH", temp_path);
 
         // create a dummy executable named `ls` in the temp directory created above
         // this executable only exists for the test, no content needed
         std::fs::write(temp_dir.path().join("ls"), "").expect("Failed to create dummy ls");
-
-        // debug the existence of the dummy executable
-        println!(
-            "Dummy ls executable exists?: {}",
-            temp_dir.path().join("ls").exists()
-        );
 
         // now setup and run the test
         let input = Cursor::new("type ls\nexit\n");
