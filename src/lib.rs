@@ -108,8 +108,23 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
                         .output()
                         .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
 
-                    writer.write_all(&output.stdout)?;
-                    writer.write_all(&output.stderr)?;
+                    // Write stdout if it's not empty
+                    if !output.stdout.is_empty() {
+                        writer.write_all(&output.stdout)?;
+                        // Only write a newline if the output doesn't end with one
+                        if !output.stdout.ends_with(b"\n") {
+                            writeln!(writer)?;
+                        }
+                    }
+
+                    // Write stderr if it's not empty
+                    if !output.stderr.is_empty() {
+                        writer.write_all(&output.stderr)?;
+                        if !output.stderr.ends_with(b"\n") {
+                            writeln!(writer)?;
+                        }
+                    }
+
                     writer.flush()?;
                 } else {
                     writeln!(writer, "{}: not found", command)?;
