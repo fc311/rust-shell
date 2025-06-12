@@ -20,7 +20,7 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
         let command = parts.next().unwrap_or("");
         let args: Vec<&str> = parts.collect();
 
-        const BUILT_INS: [&str; 4] = ["exit", "version", "echo", "type"];
+        const BUILT_INS: [&str; 5] = ["exit", "version", "echo", "type", "pwd"];
 
         match command {
             "exit" => {
@@ -85,6 +85,13 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
 
                 if !found {
                     writeln!(writer, "{}: not found", executable)?;
+                }
+            }
+            "pwd" => {
+                // Get the current working directory
+                match env::current_dir() {
+                    Ok(path) => writeln!(writer, "{}", path.display())?,
+                    Err(e) => writeln!(writer, "pwd: {}", e)?,
                 }
             }
             _ => {
