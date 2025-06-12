@@ -65,9 +65,6 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
                 // let separator = std::path::MAIN_SEPARATOR;
                 let separator = ":";
 
-                // debug the separator used for splitting the PATH
-                println!("Using separator: {}", separator);
-
                 // set a flag to indicate if the executable was found
                 let mut found = false;
 
@@ -75,9 +72,6 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
                 for dir in path.split(separator) {
                     // Construct the full path to the executable
                     let full_path = std::path::Path::new(&dir).join(executable);
-
-                    // Check if the file exists and is a regular file
-                    println!("Checking: {}", full_path.display());
 
                     if full_path.exists() {
                         writeln!(writer, "{} is {}", executable, full_path.display())?;
