@@ -413,4 +413,19 @@ mod cd_command_tests {
         assert!(output_str.contains("$ "));
         assert!(output_str.contains("cd: /nonexistent: No such file or directory"));
     }
+
+    #[test]
+    fn test_repl_handles_cd_home_directory() {
+        let home_dir = env::var("HOME").expect("HOME not set");
+        let input = Cursor::new("cd ~\npwd\nexit\n");
+        let mut output = Vec::new();
+
+        let result = run_repl(input, &mut output);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let output_str = String::from_utf8(output).unwrap();
+        assert!(output_str.contains("$ "));
+        assert!(output_str.contains(&home_dir));
+    }
 }
