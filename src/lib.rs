@@ -20,7 +20,7 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
         let command = parts.next().unwrap_or("");
         let args: Vec<&str> = parts.collect();
 
-        const BUILT_INS: [&str; 5] = ["exit", "version", "echo", "type", "pwd"];
+        const BUILT_INS: [&str; 6] = ["exit", "version", "echo", "type", "pwd", "cd"];
 
         match command {
             "exit" => {
@@ -92,6 +92,25 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
                 match env::current_dir() {
                     Ok(path) => writeln!(writer, "{}", path.display())?,
                     Err(e) => writeln!(writer, "pwd: {}", e)?,
+                }
+            }
+            "cd" => {
+                if args.is_empty() {
+                    writeln!(writer, "cd: no arguments provided")?;
+                    continue;
+                }
+                if args.len() > 1 {
+                    writeln!(writer, "cd: too many arguments")?;
+                    continue;
+                }
+                let path = Path::new(args[0]);
+                if path.is_absolute() {
+                    match env::set_current_dir(path) {
+                        Ok(()) => {}
+                        Err(_) => writeln!(writer, "cd: invalid path")?,
+                    }
+                } else {
+                    writeln!(writer, "cd: only absolute paths supported")?;
                 }
             }
             _ => {
