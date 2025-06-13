@@ -116,6 +116,51 @@ mod echo_command_tests {
         assert!(output_str.contains("$ "));
         assert!(output_str.contains("echo: no arguments provided"));
     }
+
+    #[test]
+    fn test_repl_handles_echo_quoted_arg() {
+        let input = Cursor::new("echo 'hello world'\nexit\n");
+        let mut output = Vec::new();
+
+        let result = run_repl(input, &mut output);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let output_str = String::from_utf8(output).unwrap();
+        assert!(output_str.contains("$ "));
+        assert!(output_str.contains("hello world"));
+        assert!(!output_str.contains("command not found"));
+    }
+
+    #[test]
+    fn test_repl_handles_echo_quoted_arg_exact_string_literal() {
+        let input = Cursor::new("echo 'world     test'\nexit\n");
+        let mut output = Vec::new();
+
+        let result = run_repl(input, &mut output);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let output_str = String::from_utf8(output).unwrap();
+        assert!(output_str.contains("$ "));
+        assert!(output_str.contains("world     test"));
+        assert!(!output_str.contains("command not found"));
+    }
+
+    #[test]
+    fn test_repl_handles_echo_mixed_args() {
+        let input = Cursor::new("echo 'hello world' unquoted\nexit\n");
+        let mut output = Vec::new();
+
+        let result = run_repl(input, &mut output);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let output_str = String::from_utf8(output).unwrap();
+        assert!(output_str.contains("$ "));
+        assert!(output_str.contains("hello world unquoted"));
+        assert!(!output_str.contains("command not found"));
+    }
 }
 
 #[cfg(test)]
@@ -304,6 +349,34 @@ mod executable_tests {
         assert!(output_str.contains("hello"));
         assert!(!output_str.contains("Mock echo"));
     }
+
+    #[test]
+    fn test_repl_handles_cat_quoted_paths() {
+        let temp_dir = tempfile::tempdir().expect("Failed to create temp dir");
+        let temp_path = temp_dir.path().to_str().unwrap();
+        std::env::set_var("PATH", "/bin:/usr/bin"); // Ensure 'cat' is found
+
+        let file1 = temp_dir.path().join("file name");
+        fs::write(&file1, "Content of file1\n").expect("Failed to write file1");
+        let file2 = temp_dir.path().join("file name with spaces");
+        fs::write(&file2, "Content of file2\n").expect("Failed to write file2");
+
+        let input = Cursor::new(format!(
+            "cat '{}' '{}'\nexit\n",
+            file1.display(),
+            file2.display()
+        ));
+        let mut output = Vec::new();
+
+        let result = run_repl(input, &mut output);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let output_str = String::from_utf8(output).unwrap();
+        assert!(output_str.contains("$ "));
+        assert!(output_str.contains("Content of file1"));
+        assert!(output_str.contains("Content of file2"));
+    }
 }
 
 #[cfg(test)]
@@ -427,5 +500,38 @@ mod cd_command_tests {
         let output_str = String::from_utf8(output).unwrap();
         assert!(output_str.contains("$ "));
         assert!(output_str.contains(&home_dir));
+    }
+}
+
+#[cfg(test)]
+mod parsing_tests {
+    use super::*;
+
+    #[test]
+    fn test_repl_handles_unclosed_quote() {
+        let input = Cursor::new("echo 'unclosed\nexit\n");
+        let mut output = Vec::new();
+
+        let result = run_repl(input, &mut output);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let output_str = String::from_utf8(output).unwrap();
+        assert!(output_str.contains("$ "));
+        assert!(output_str.contains("parse error: unclosed single quote"));
+    }
+
+    #[test]
+    fn test_repl_handles_quote_in_quote() {
+        let input = Cursor::new("echo 'can\\'t'\nexit\n");
+        let mut output = Vec::new();
+
+        let result = run_repl(input, &mut output);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let output_str = String::from_utf8(output).unwrap();
+        assert!(output_str.contains("$ "));
+        assert!(output_str.contains("parse error: single quote within single-quoted string"));
     }
 }
