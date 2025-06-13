@@ -15,7 +15,7 @@ mod prompt_tests {
 
         let output_str = String::from_utf8(output).unwrap();
         assert!(output_str.contains("$ "));
-        assert!(output_str.contains("hello: command not found"));
+        assert!(output_str.contains("hello: not found"));
     }
 }
 
