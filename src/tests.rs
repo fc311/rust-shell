@@ -388,6 +388,6 @@ mod cd_command_tests {
 
         let output_str = String::from_utf8(output).unwrap();
         assert!(output_str.contains("$ "));
-        assert!(output_str.contains("cd: invalid path"));
+        assert!(output_str.contains("cd: /nonexistent: No such file or directory"));
     }
 }

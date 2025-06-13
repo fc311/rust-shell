@@ -107,7 +107,9 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
                 if path.is_absolute() {
                     match env::set_current_dir(path) {
                         Ok(()) => {}
-                        Err(_) => writeln!(writer, "cd: invalid path")?,
+                        Err(_) => {
+                            writeln!(writer, "cd: {}: No such file or directory", path.display())?
+                        }
                     }
                 } else {
                     writeln!(writer, "cd: only absolute paths supported")?;
