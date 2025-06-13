@@ -104,7 +104,22 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
                     continue;
                 }
                 let path = Path::new(args[0]);
-                if path.is_absolute() {
+                if path.to_str().unwrap() == "~" {
+                    // If the path is "~", change to the home directory
+                    match env::home_dir() {
+                        Some(home) => match env::set_current_dir(home) {
+                            Ok(()) => {}
+                            Err(_) => writeln!(writer, "cd: No such file or directory")?,
+                        },
+                        None => writeln!(writer, "cd: Home directory not found")?,
+                    }
+                } else if path == Path::new("/") {
+                    // If the path is "/", change to the root directory
+                    match env::set_current_dir("/") {
+                        Ok(()) => {}
+                        Err(_) => writeln!(writer, "cd: No such file or directory")?,
+                    }
+                } else if path.is_absolute() {
                     match env::set_current_dir(path) {
                         Ok(()) => {}
                         Err(_) => {
