@@ -112,7 +112,10 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
                         }
                     }
                 } else {
-                    writeln!(writer, "cd: only absolute paths supported")?;
+                    match env::set_current_dir(path) {
+                        Ok(()) => {}
+                        Err(_) => writeln!(writer, "cd: invalid path")?,
+                    }
                 }
             }
             _ => {

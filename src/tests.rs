@@ -330,7 +330,7 @@ mod pwd_command_tests {
 mod cd_command_tests {
     use super::*;
     // use std::env;
-    // use std::fs;
+    use std::fs;
 
     #[test]
     fn test_repl_handles_cd_absolute_path() {
@@ -347,6 +347,29 @@ mod cd_command_tests {
         let output_str = String::from_utf8(output).unwrap();
         assert!(output_str.contains("$ "));
         assert!(output_str.contains(temp_path));
+    }
+
+    #[test]
+    fn test_repl_handles_cd_relative_path() {
+        let temp_dir = tempfile::tempdir().expect("Failed to create temp dir");
+        let subdir = temp_dir.path().join("subdir");
+        fs::create_dir(&subdir).expect("Failed to create subdir");
+        let subdir_path = subdir.to_str().unwrap();
+        let temp_path = temp_dir.path().to_str().unwrap();
+
+        // Start in temp_dir
+        env::set_current_dir(temp_path).expect("Failed to set current dir");
+
+        let input = Cursor::new("cd subdir\npwd\nexit\n");
+        let mut output = Vec::new();
+
+        let result = run_repl(input, &mut output);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let output_str = String::from_utf8(output).unwrap();
+        assert!(output_str.contains("$ "));
+        assert!(output_str.contains(subdir_path));
     }
 
     #[test]
