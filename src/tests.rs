@@ -325,3 +325,69 @@ mod pwd_command_tests {
         assert!(output_str.contains(&env::current_dir().unwrap().to_string_lossy().to_string()));
     }
 }
+
+#[cfg(test)]
+mod cd_command_tests {
+    use super::*;
+    // use std::env;
+    // use std::fs;
+
+    #[test]
+    fn test_repl_handles_cd_absolute_path() {
+        let temp_dir = tempfile::tempdir().expect("Failed to create temp dir");
+        let temp_path = temp_dir.path().to_str().unwrap();
+
+        let input = Cursor::new(format!("cd {}\npwd\nexit\n", temp_path));
+        let mut output = Vec::new();
+
+        let result = run_repl(input, &mut output);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let output_str = String::from_utf8(output).unwrap();
+        assert!(output_str.contains("$ "));
+        assert!(output_str.contains(temp_path));
+    }
+
+    #[test]
+    fn test_repl_handles_cd_no_args() {
+        let input = Cursor::new("cd\nexit\n");
+        let mut output = Vec::new();
+
+        let result = run_repl(input, &mut output);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let output_str = String::from_utf8(output).unwrap();
+        assert!(output_str.contains("$ "));
+        assert!(output_str.contains("cd: no arguments provided"));
+    }
+
+    #[test]
+    fn test_repl_handles_cd_too_many_args() {
+        let input = Cursor::new("cd /tmp /home\nexit\n");
+        let mut output = Vec::new();
+
+        let result = run_repl(input, &mut output);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let output_str = String::from_utf8(output).unwrap();
+        assert!(output_str.contains("$ "));
+        assert!(output_str.contains("cd: too many arguments"));
+    }
+
+    #[test]
+    fn test_repl_handles_cd_invalid_path() {
+        let input = Cursor::new("cd /nonexistent\nexit\n");
+        let mut output = Vec::new();
+
+        let result = run_repl(input, &mut output);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let output_str = String::from_utf8(output).unwrap();
+        assert!(output_str.contains("$ "));
+        assert!(output_str.contains("cd: invalid path"));
+    }
+}
