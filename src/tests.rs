@@ -353,7 +353,7 @@ mod executable_tests {
     #[test]
     fn test_repl_handles_cat_quoted_paths() {
         let temp_dir = tempfile::tempdir().expect("Failed to create temp dir");
-        let temp_path = temp_dir.path().to_str().unwrap();
+        // let temp_path = temp_dir.path().to_str().unwrap();
         std::env::set_var("PATH", "/bin:/usr/bin"); // Ensure 'cat' is found
 
         let file1 = temp_dir.path().join("file name");
@@ -531,6 +531,7 @@ mod parsing_tests {
         assert_eq!(result.unwrap(), 0);
 
         let output_str = String::from_utf8(output).unwrap();
+        println!("{}", output_str);
         assert!(output_str.contains("$ "));
         assert!(output_str.contains("parse error: single quote within single-quoted string"));
     }

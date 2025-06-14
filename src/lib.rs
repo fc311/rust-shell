@@ -3,6 +3,8 @@ use std::io::{self, BufRead, Write};
 use std::path::Path;
 use std::process::Command;
 
+mod helpers;
+
 pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Result<i32> {
     loop {
         write!(writer, "$ ")?;
@@ -16,13 +18,23 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
             continue;
         }
 
+        /*
         let mut parts = input.split_whitespace();
         let command = parts.next().unwrap_or("");
         let args: Vec<&str> = parts.collect();
+        */
+
+        let (command, args) = match helpers::parse_input(input) {
+            Ok((cmd, args)) => (cmd, args),
+            Err(e) => {
+                writeln!(writer, "{}", e)?;
+                continue;
+            }
+        };
 
         const BUILT_INS: [&str; 6] = ["exit", "version", "echo", "type", "pwd", "cd"];
 
-        match command {
+        match command.as_str() {
             "exit" => {
                 if args.is_empty() || (args.len() == 1 && args[0] == "0") {
                     return Ok(0);
@@ -53,10 +65,10 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
                 }
 
                 // extract the executable name from the argument provided with `type`
-                let executable = args[0];
+                let executable = &args[0];
 
                 // check if the executable provided is a shell builtin
-                if BUILT_INS.contains(&executable) {
+                if BUILT_INS.contains(&executable.as_str()) {
                     writeln!(writer, "{} is a shell builtin", executable)?;
                     continue;
                 }
@@ -103,7 +115,7 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
                     writeln!(writer, "cd: too many arguments")?;
                     continue;
                 }
-                let path = Path::new(args[0]);
+                let path = Path::new(&args[0]);
                 if path.to_str().unwrap() == "~" {
                     // If the path is "~", change to the home directory
                     match env::home_dir() {
@@ -138,9 +150,9 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
                 let separator = ":";
 
                 let mut found = false;
-                let mut full_path = Path::new(command).to_path_buf();
+                let mut full_path = Path::new(&command).to_path_buf();
                 for dir in path.split(separator) {
-                    let candidate = Path::new(dir).join(command);
+                    let candidate = Path::new(dir).join(command.clone());
                     if candidate.exists() {
                         full_path = candidate;
                         found = true;
