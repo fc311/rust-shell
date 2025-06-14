@@ -1,5 +1,6 @@
 use std::env;
 use std::io::{self, BufRead, Write};
+use std::os::unix::process::CommandExt;
 use std::path::Path;
 use std::process::Command;
 
