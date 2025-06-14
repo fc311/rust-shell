@@ -14,6 +14,7 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
         reader.read_line(&mut input)?;
         let input = input.trim();
 
+        // If the input is empty, continue to the next iteration
         if input.is_empty() {
             continue;
         }
@@ -24,6 +25,7 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
         let args: Vec<&str> = parts.collect();
         */
 
+        // Parse the input command and arguments using the helper function
         let (command, args) = match helpers::parse_input(input) {
             Ok((cmd, args)) => (cmd, args),
             Err(e) => {
@@ -32,8 +34,10 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
             }
         };
 
+        // setup list of built-in commands
         const BUILT_INS: [&str; 6] = ["exit", "version", "echo", "type", "pwd", "cd"];
 
+        // handle the command if it is a built-in command, and if it is not a built-in command, check if it exists in the PATH
         match command.as_str() {
             "exit" => {
                 if args.is_empty() || (args.len() == 1 && args[0] == "0") {
