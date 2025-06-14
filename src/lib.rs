@@ -108,7 +108,15 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
                 let path = Path::new(&path_str);
                 match env::set_current_dir(path) {
                     Ok(()) => {}
-                    Err(e) => writeln!(writer, "cd: {}: {}", path_str, e)?,
+                    Err(e) => {
+                        // Extract just the error kind and create a simpler message
+                        let msg = match e.kind() {
+                            io::ErrorKind::NotFound => "No such file or directory",
+                            io::ErrorKind::PermissionDenied => "Permission denied",
+                            _ => "Error changing directory",
+                        };
+                        writeln!(writer, "cd: {}: {}", path_str, msg)?;
+                    }
                 }
             }
             _ => {
