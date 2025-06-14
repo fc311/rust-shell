@@ -135,7 +135,9 @@ pub fn run_repl<R: BufRead, W: Write>(mut reader: R, mut writer: W) -> io::Resul
                 }
 
                 if found {
+                    let command_name = command.split('/').last().unwrap_or(&command).to_string();
                     let output = Command::new(&full_path)
+                        .arg0(&command_name) // Set argv[0] to just the command name
                         .args(&args)
                         .output()
                         .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
