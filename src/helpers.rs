@@ -11,11 +11,6 @@ pub fn parse_input(input: &str) -> Result<(String, Vec<String>), String> {
         if !in_quotes {
             match c {
                 '\'' => {
-                    if chars.peek() == Some(&'\'') {
-                        return Err(
-                            "parse error: single quote within single-quoted string".to_string()
-                        );
-                    }
                     in_quotes = true;
                 }
                 ' ' => {
@@ -34,6 +29,11 @@ pub fn parse_input(input: &str) -> Result<(String, Vec<String>), String> {
         } else {
             if c == '\'' {
                 in_quotes = false;
+                // Check if next char is also a quote - if so, skip it as we're concatenating
+                if chars.peek() == Some(&'\'') {
+                    chars.next(); // consume the second quote
+                    in_quotes = true; // stay in quote mode
+                }
             } else {
                 current_arg.push(c);
             }

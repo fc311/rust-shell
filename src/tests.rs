@@ -161,6 +161,20 @@ mod echo_command_tests {
         assert!(output_str.contains("hello world unquoted"));
         assert!(!output_str.contains("command not found"));
     }
+
+    #[test]
+    fn test_repl_handles_echo_adjacent_quotes() {
+        let input = Cursor::new("echo 'test     hello' 'example''script' shell''world\nexit\n");
+        let mut output = Vec::new();
+
+        let result = run_repl(input, &mut output);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+
+        let output_str = String::from_utf8(output).unwrap();
+        assert!(output_str.contains("$ "));
+        assert!(output_str.contains("test     hello examplescript shellworld"));
+    }
 }
 
 #[cfg(test)]
